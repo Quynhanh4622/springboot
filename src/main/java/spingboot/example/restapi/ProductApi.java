@@ -11,6 +11,8 @@ import spingboot.example.validation.ProductIDExisting;
 import spingboot.example.dto.ResponseDTO;
 
 import javax.validation.Valid;
+import java.util.Optional;
+
 @CrossOrigin("*")
 @RestController
 @RequestMapping("/api/v1/products")
@@ -46,13 +48,17 @@ public class ProductApi {
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ResponseDTO> update(@PathVariable Long id, @RequestBody @Valid Product product) {
-        ResponseDTO responseDTO = ResponseDTO.builder()
-                .status(HttpStatus.ACCEPTED.toString())
-                .body(productService.save(product)).build();
-
-        return ResponseEntity.accepted().body(responseDTO);
+    @RequestMapping(method = RequestMethod.PUT, path = "{id}")
+    public ResponseEntity<Product> update(@PathVariable long id, @RequestBody Product product) {
+        Optional<Product> productId = productService.findById(id);
+        if (!productId.isPresent()){
+            ResponseEntity.badRequest().build();
+        }
+        Product exitsProduct = productId.get();
+        exitsProduct.setName(product.getName());
+        exitsProduct.setDescription(product.getDescription());
+        exitsProduct.setPrice(product.getPrice());
+        return ResponseEntity.ok(productService.save(exitsProduct));
     }
 
     @DeleteMapping("/{id}")
